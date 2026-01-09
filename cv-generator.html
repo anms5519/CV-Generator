@@ -182,7 +182,8 @@
         #cv-paper {
             background: white;
             width: 210mm;
-            height: 100vh;
+            min-height: 297mm;
+            height: auto;
             padding: 40px 50px;
             box-sizing: border-box;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
@@ -377,6 +378,8 @@
             display: flex;
             justify-content: flex-end;
             margin-right: 20px;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
 
         .signature-box {
@@ -395,13 +398,32 @@
         .signature-img img {
             max-height: 100%;
             max-width: 100%;
-            display: none;
         }
 
         .signature-line {
             border-top: 1px solid #000;
             padding-top: 5px;
             font-weight: bold;
+        }
+
+        /* Page Break Handling */
+        .exp-item,
+        .ref-item,
+        .section-header,
+        .declaration,
+        .cv-header {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        tr {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .edu-table,
+        .info-table {
+            break-inside: auto;
         }
 
         /* Cropper Modal */
@@ -899,7 +921,11 @@
 
         window.cropImage = () => {
             if (!cropper) return;
-            const canvas = cropper.getCroppedCanvas({ width: currentPhotoType === 'photo' ? 300 : 600 });
+            // Higher resolution for print (approx 300dpi for photo at 2x2 inch is 600px, we go higher for quality)
+            // 1200px width provides good quality for typical CV header photo size
+            const canvas = cropper.getCroppedCanvas({
+                width: currentPhotoType === 'photo' ? 1200 : 2400
+            });
             const dataUrl = canvas.toDataURL();
             if (currentPhotoType === 'photo') cvData.personal.photo = dataUrl;
             else cvData.signature = dataUrl;
