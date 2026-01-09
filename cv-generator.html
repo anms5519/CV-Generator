@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CV Generator with Cropper</title>
-    
+    <title>CV Generator - Dynamic</title>
     <!-- Cropper.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
-
     <style>
         :root {
-            --primary-color: #0056b3;
-            --text-color: #333;
+            --primary-color: #2e5cb8;
+            --text-color: #000;
             --bg-color: #f4f4f9;
         }
 
@@ -25,41 +24,126 @@
             overflow: hidden;
         }
 
-        /* --- EDITOR SIDEBAR (Left) --- */
+        /* --- LEFT SIDE: EDITOR --- */
         .editor {
-            width: 40%;
+            width: 400px;
+            flex-shrink: 0;
             background: #fff;
             padding: 20px;
             overflow-y: auto;
             border-right: 1px solid #ccc;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             gap: 15px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
 
-        .editor h2 { margin: 10px 0 5px 0; color: var(--primary-color); border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
-        .form-group input[type="text"], .form-group textarea {
+        .editor h2 {
+            margin: 20px 0 10px 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+            font-size: 1.2rem;
+        }
+
+        .editor-section {
+            border: 1px solid #eee;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 8px;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
             font-family: inherit;
+            font-size: 0.9rem;
         }
-        .form-group textarea { resize: vertical; height: 60px; }
-        .hint { font-size: 0.8rem; color: #666; margin-top: 2px; }
 
-        /* Upload Buttons */
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .btn-add,
+        .btn-remove {
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .btn-add {
+            background-color: #e6f0ff;
+            color: var(--primary-color);
+            width: 100%;
+            font-weight: bold;
+        }
+
+        .btn-add:hover {
+            background-color: #d1e2ff;
+        }
+
+        .btn-remove {
+            background-color: #ffe6e6;
+            color: #d93025;
+            position: absolute;
+            top: 5px;
+            right: 5px;
+        }
+
+        .btn-remove:hover {
+            background-color: #ffcccc;
+        }
+
+        .print-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .print-btn:hover {
+            background-color: #1a459c;
+        }
+
+        /* Upload Wrappers */
         .upload-btn-wrapper {
             position: relative;
             overflow: hidden;
-            display: inline-block;
+            display: block;
             width: 100%;
+            min-height: 40px;
             margin-bottom: 10px;
         }
+
         .btn-upload {
             border: 2px dashed var(--primary-color);
             color: var(--primary-color);
@@ -71,450 +155,764 @@
             width: 100%;
             cursor: pointer;
             text-align: center;
+            box-sizing: border-box;
         }
+
         .upload-btn-wrapper input[type=file] {
             font-size: 100px;
             position: absolute;
             left: 0;
             top: 0;
             opacity: 0;
-            cursor: pointer;
             width: 100%;
             height: 100%;
-        }
-
-        button.print-btn {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 1rem;
             cursor: pointer;
-            width: 100%;
-            border-radius: 5px;
-            margin-bottom: 10px;
         }
-        button.print-btn:hover { background-color: #004494; }
 
-        /* --- PREVIEW AREA (Right) --- */
+        /* --- RIGHT SIDE: PREVIEW --- */
         .preview-container {
-            width: 60%;
-            background: #525659;
+            flex-grow: 1;
+            background: #feffff;
             padding: 40px;
             overflow-y: auto;
             display: flex;
             justify-content: center;
         }
 
-        /* --- THE CV PAPER --- */
         #cv-paper {
             background: white;
             width: 210mm;
-            min-height: 297mm;
+            height: 100vh;
             padding: 40px 50px;
             box-sizing: border-box;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
             color: #000;
-            font-size: 14px;
+            font-size: 14.5px;
             line-height: 1.4;
             position: relative;
         }
 
-        /* --- CV STYLING --- */
         .cv-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
-        .header-text { flex: 1; }
-        .cv-header h1 { color: var(--primary-color); margin: 0 0 5px 0; font-size: 24px; }
-        .cv-header p { margin: 2px 0; }
 
-        /* Profile Photo in CV */
-        .profile-photo-container {
+        .header-text {
+            flex: 1;
+        }
+
+        .header-text h1 {
+            color: var(--primary-color);
+            margin: 0 0 8px 0;
+            font-size: 26px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .header-text p {
+            margin: 3px 0;
+            font-size: 14px;
+            color: #000;
+        }
+
+        .profile-photo {
             width: 120px;
             height: 140px;
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             margin-left: 20px;
+            background: #f0f0f0;
             display: flex;
-            align-items: center;
             justify-content: center;
-            background-color: #f9f9f9;
+            align-items: center;
             overflow: hidden;
         }
-        .profile-photo-container img {
+
+        .profile-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            display: none; /* Hidden until uploaded */
+            display: none;
         }
-        .profile-placeholder { color: #ccc; font-size: 12px; text-align: center; }
 
-        .section-title {
+        .profile-photo.has-img img {
+            display: block;
+        }
+
+        .profile-photo span {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .section-header {
             color: var(--primary-color);
-            border-bottom: 2px solid var(--primary-color);
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            margin-top: 15px;
-            margin-bottom: 8px;
-            padding-bottom: 2px;
+            border-bottom: 1.5px solid var(--primary-color);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
         }
 
-        .content-text { text-align: justify; }
-        ul { margin-top: 5px; margin-bottom: 5px; padding-left: 20px; }
-        li { margin-bottom: 3px; }
+        .content-text {
+            text-align: justify;
+            margin-bottom: 5px;
+        }
 
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        th, td { border: 1px solid #000; padding: 6px; text-align: left; vertical-align: top; }
-        th { background-color: #f0f0f0; font-weight: bold; }
+        ul {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
 
-        /* Info Grid */
-        .info-grid { display: table; width: 100%; }
-        .info-row { display: table-row; }
-        .info-label { display: table-cell; width: 180px; padding: 3px 0; font-weight: bold; color: #444; }
-        .info-value { display: table-cell; padding: 3px 0; }
+        li {
+            margin-bottom: 3px;
+        }
+
+        /* Experience Item */
+        .exp-item {
+            margin-bottom: 15px;
+        }
+
+        .exp-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 3px;
+        }
+
+        .exp-sub {
+            font-style: italic;
+            font-size: 14px;
+            margin-bottom: 2px;
+        }
+
+        .exp-duties {
+            margin-top: 2px;
+        }
+
+        /* Education Table */
+        table.edu-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .edu-table th,
+        .edu-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .edu-table th {
+            background-color: transparent;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .edu-table td {
+            text-align: center;
+        }
+
+        .edu-table td:first-child,
+        .edu-table td:nth-child(2) {
+            text-align: left;
+        }
+
+        /* Personal Info Grid */
+        .info-table {
+            width: 100%;
+            border: none;
+            margin-top: 5px;
+        }
+
+        .info-table td {
+            border: none;
+            padding: 4px 0;
+            vertical-align: top;
+        }
+
+        .info-key {
+            width: 220px;
+            font-weight: bold;
+        }
+
+        .info-val {
+            font-weight: normal;
+        }
+
+        /* Reference */
+        .ref-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .ref-item {
+            margin-bottom: 15px;
+        }
+
+        .ref-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .ref-details {
+            white-space: pre-line;
+        }
+
+        /* Declaration */
+        .declaration {
+            margin-top: 20px;
+            text-align: justify;
+        }
 
         /* Signature */
-        .signature-section { margin-top: 40px; text-align: right; }
-        .signature-box { display: inline-block; text-align: center; min-width: 200px; }
-        .signature-img-container {
-            height: 60px;
+        .signature-area {
+            margin-top: 50px;
+            display: flex;
+            justify-content: flex-end;
+            margin-right: 20px;
+        }
+
+        .signature-box {
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .signature-img {
+            height: 50px;
             margin-bottom: 5px;
             display: flex;
             align-items: flex-end;
             justify-content: center;
         }
-        .signature-img-container img {
+
+        .signature-img img {
             max-height: 100%;
             max-width: 100%;
             display: none;
         }
+
         .signature-line {
             border-top: 1px solid #000;
             padding-top: 5px;
             font-weight: bold;
-            text-transform: uppercase;
         }
 
-        /* --- MODAL FOR CROPPING --- */
+        /* Cropper Modal */
         .modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0; top: 0; 
-            width: 100%; height: 100%; 
-            background-color: rgba(0,0,0,0.8); 
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
         }
+
         .modal-content {
             background-color: #fefefe;
-            margin: 5% auto; 
+            margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 80%;
+            width: 90%;
             max-width: 600px;
             border-radius: 8px;
         }
+
         .img-container {
             max-height: 400px;
             margin-bottom: 20px;
+            overflow: hidden;
         }
+
         .img-container img {
             max-width: 100%;
         }
+
         .modal-actions {
             text-align: right;
         }
-        .btn-crop { background-color: var(--primary-color); color: white; padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; }
-        .btn-cancel { background-color: #ccc; color: #333; padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; margin-right: 10px; }
 
-        /* --- PRINT MEDIA QUERY --- */
+        .btn-modal {
+            padding: 8px 16px;
+            margin-left: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: none;
+            font-weight: bold;
+        }
+
+        .btn-cancel {
+            background: #ddd;
+            color: #333;
+        }
+
+        .btn-save {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
         @media print {
-            body { height: auto; overflow: visible; background: white; }
-            .editor, .modal { display: none !important; }
-            .preview-container { width: 100%; padding: 0; background: white; display: block; }
-            #cv-paper { width: 100%; box-shadow: none; padding: 0; margin: 0; min-height: auto; }
-            @page { margin: 15mm 20mm; size: A4; }
+            body {
+                height: auto;
+                overflow: visible;
+                background: white;
+            }
+
+            .editor,
+            .modal {
+                display: none !important;
+            }
+
+            .preview-container {
+                width: 100%;
+                padding: 0;
+                display: block;
+                background: white;
+            }
+
+            #cv-paper {
+                width: 100%;
+                padding: 0;
+                box-shadow: none;
+                margin: 0;
+                min-height: auto;
+            }
+
+            @page {
+                margin: 15mm 20mm;
+                size: A4;
+            }
         }
     </style>
 </head>
+
 <body>
 
-    <!-- EDITOR SIDEBAR -->
-    <div class="editor">
-        <button class="print-btn" onclick="window.print()">Download PDF / Print</button>
-        
-        <h2>Images</h2>
-        <div class="upload-btn-wrapper">
-            <button class="btn-upload">Upload Profile Photo</button>
-            <input type="file" id="upload-photo" accept="image/*" onchange="initCropper(this, 'photo')">
-        </div>
-        <div class="upload-btn-wrapper">
-            <button class="btn-upload">Upload Signature</button>
-            <input type="file" id="upload-sig" accept="image/*" onchange="initCropper(this, 'signature')">
-        </div>
-
-        <h2>Header Details</h2>
-        <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" id="inp-name" value="Ms. Tamanna Khan" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>Address</label>
-            <input type="text" id="inp-address" value="Dhaka Nursing College ladies hostel, Dhaka" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>Phone</label>
-            <input type="text" id="inp-phone" value="01320893252" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>Email</label>
-            <input type="text" id="inp-email" value="tamannakhan2204@gmail.com" oninput="updateCV()">
-        </div>
-
-        <h2>Objective</h2>
-        <div class="form-group">
-            <textarea id="inp-objective" oninput="updateCV()">Dedicated and compassionate third-year Diploma in Midwifery student, committed to providing safe, respectful, and evidence-based maternal and newborn care.</textarea>
-        </div>
-
-        <h2>Experience</h2>
-        <div class="form-group">
-            <label>Job Title & Place</label>
-            <input type="text" id="inp-job1-title" value="Clinical practice at Dhaka Medical College and Hospital" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>Duration</label>
-            <input type="text" id="inp-job1-date" value="January, 2023 - October, 2025" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>Duties (One per line)</label>
-            <textarea id="inp-duties" oninput="updateCV()">Antenatal Ward – Assisted in antenatal checkups
-Labour & Delivery Unit – Conducted normal vaginal deliveries
-Postnatal Ward – Provided newborn care</textarea>
-        </div>
-
-        <h2>Education</h2>
-        <div class="form-group">
-            <label>Degree</label>
-            <input type="text" id="inp-edu1-deg" value="Diploma in Midwifery" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>Institution</label>
-            <input type="text" id="inp-edu1-school" value="Dhaka Nursing College" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>Grade / Year</label>
-            <input type="text" id="inp-edu1-grade" value="CGPA 3.88 / 2021-2022" oninput="updateCV()">
-        </div>
-
-        <h2>Personal Info</h2>
-        <div class="form-group">
-            <label>Father's Name</label>
-            <input type="text" id="inp-father" value="Md. Chand Khan" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>Date of Birth</label>
-            <input type="text" id="inp-dob" value="5th August, 2004" oninput="updateCV()">
-        </div>
-        <div class="form-group">
-            <label>NID No</label>
-            <input type="text" id="inp-nid" value="1522621620" oninput="updateCV()">
-        </div>
+    <div class="editor" id="editor-panel">
+        <!-- Dynamic content -->
     </div>
 
-    <!-- PREVIEW AREA -->
     <div class="preview-container">
         <div id="cv-paper">
-            
-            <!-- Header -->
-            <div class="cv-header">
-                <div class="header-text">
-                    <h1 id="out-name">Ms. Tamanna Khan</h1>
-                    <p id="out-address">Dhaka Nursing College ladies hostel, Dhaka</p>
-                    <p id="out-phone">01320893252</p>
-                    <p id="out-email">tamannakhan2204@gmail.com</p>
-                </div>
-                <div class="profile-photo-container">
-                    <span class="profile-placeholder" id="photo-placeholder">Photo</span>
-                    <img id="out-photo-img" src="" alt="Profile Photo">
-                </div>
-            </div>
-
-            <!-- Objective -->
-            <div class="section-title">Objective</div>
-            <div class="content-text" id="out-objective"></div>
-
-            <!-- Experience -->
-            <div class="section-title">Experience</div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                <span id="out-job1-title"></span>
-                <span id="out-job1-date"></span>
-            </div>
-            <ul id="out-duties"></ul>
-
-            <!-- Education -->
-            <div class="section-title">Education</div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Degree</th>
-                        <th>Institution</th>
-                        <th>Grade / Year</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td id="out-edu1-deg"></td>
-                        <td id="out-edu1-school"></td>
-                        <td id="out-edu1-grade"></td>
-                    </tr>
-                </tbody>
-            </table>
-
-            <!-- Personal Info -->
-            <div class="section-title">Personal Information</div>
-            <div class="info-grid">
-                <div class="info-row"><div class="info-label">Father's Name:</div><div class="info-value" id="out-father"></div></div>
-                <div class="info-row"><div class="info-label">Date of Birth:</div><div class="info-value" id="out-dob"></div></div>
-                <div class="info-row"><div class="info-label">NID NO:</div><div class="info-value" id="out-nid"></div></div>
-            </div>
-
-            <!-- Declaration -->
-            <div class="section-title">Declaration</div>
-            <p class="content-text">
-                I hereby declare that all the information stated above is true, complete, and accurate to the best of my knowledge and belief.
-            </p>
-
-            <!-- Signature -->
-            <div class="signature-section">
-                <div class="signature-box">
-                    <div class="signature-img-container">
-                        <img id="out-sig-img" src="" alt="Signature">
-                    </div>
-                    <div class="signature-line" id="out-sig-name"></div>
-                </div>
-            </div>
-
+            <!-- Dynamic preview -->
         </div>
     </div>
 
-    <!-- CROPPER MODAL -->
     <div id="crop-modal" class="modal">
         <div class="modal-content">
-            <h3>Crop Image</h3>
+            <h3>Adjust Image</h3>
             <div class="img-container">
                 <img id="image-to-crop" src="">
             </div>
             <div class="modal-actions">
-                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-                <button class="btn-crop" onclick="cropImage()">Crop & Save</button>
+                <button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-modal btn-save" onclick="cropImage()">Save Choice</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script>
-        // --- CV TEXT UPDATE LOGIC ---
-        function updateCV() {
-            const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
-            const setList = (outId, inId) => {
-                const input = document.getElementById(inId).value;
-                const list = document.getElementById(outId);
-                list.innerHTML = '';
-                input.split('\n').forEach(item => {
-                    if(item.trim()) {
-                        const li = document.createElement('li');
-                        li.innerText = item;
-                        list.appendChild(li);
-                    }
-                });
-            };
+        // --- UPDATED DATA FROM USER REQUEST ---
+        const defaultData = {
+            personal: {
+                name: "Ms. Tamanna Khan",
+                address: "Dhaka Nursing College ladies hostel, Dhaka",
+                phone: "01320893252",
+                email: "tamannakhan2204@gmail.com",
+                photo: ""
+            },
+            objective: "Dedicated and compassionate third-year Diploma in Midwifery student, committed to providing safe, respectful, and evidence-based maternal and newborn care. Seeking an opportunity to apply my clinical knowledge, hands-on skills, and empathetic communication in a hospital setting to support mothers and families during childbirth and postnatal care.",
+            experiences: [
+                {
+                    title: "Clinical practice at Dhaka Medical College and Hospital",
+                    role: "Student midwife",
+                    date: "January, 2023 - October, 2025",
+                    duties: "Antenatal Ward – Assisted in antenatal checkups, counselling, and documentation\nLabour & Delivery Unit – Conducted and assisted in normal vaginal deliveries under supervision\nPostnatal Ward – Provided newborn care, breastfeeding support, and postnatal education\nFamily Planning Unit – Observed and participated in family planning counselling sessions\nNeonatal Care – Observed newborn assessments and basic neonatal resuscitation\nObstetric ICU: Observed management of critically ill obstetric patients\nObstetric HDU: Assisted in monitoring high-risk pregnancy cases\nC/S Operating Theatre: Assisted in preparing patients and observing cesarean procedures\nEclampsia Ward: Supported care and monitoring of eclampsia patients\nFeto-Maternal Medicine Unit: Observed management of high-risk fetal and maternal conditions\nPediatric Medicine Ward: Provided pediatric care and monitoring\nGynae Medicine Ward: Observed gynecological case management and patient care\nFistula Ward: Assisted in basic care and rehabilitation of fistula patients\nPostoperative Ward (C/S): Monitored recovery and supported postoperative care"
+                },
+                {
+                    title: "Led care at Upazila Heath Complex, Dohar",
+                    role: "Student midwife",
+                    date: "July, 2025 - August, 2025",
+                    duties: ""
+                }
+            ],
+            education: [
+                { degree: "Diploma in Midwifery", school: "Dhaka Nursing College, Dhaka", grade: "1st year CGPA 3.88 and in 2nd year CGPA 4\nFinal exam result pending", year: "Session 2021-2022" },
+                { degree: "HSC (Science)", school: "Kashinathpur Women's Degree College", grade: "GPA 4.87", year: "2021" },
+                { degree: "SSC (Science)", school: "Durgapur Nesara Khatun Girl's High School", grade: "GPA 4.72", year: "2019" }
+            ],
+            competencies: "Conducting normal vaginal deliveries\nMonitoring maternal vital signs and fetal well-being\nProviding newborn care and initial resuscitation\nPatient communication and counselling\nMaintaining infection prevention practice\nMedication administration ( as per protocol)\nEmergency response ( Eclampsia, PPH observation)\nBasic documentation and report writing\nProviding Basic life supports",
+            softSkills: "MS word & PowerPoint\nInternet & email communication\nData entry & documentation",
+            achievements: "Course completion certificates on Basic life supports\nWorkplace essentials communication\nUnleash cognitive empowerment\nExcel essentials for workplace productivity",
+            languages: "Bangla & English",
+            personalDetails: {
+                "Full Name": "Ms. Tamanna Khan",
+                "Father's name": "Md. Chand Khan",
+                "Mother's name": "Ms. Selina Khatun",
+                "Date of birth": "5th August, 2004",
+                "Present Address": "Dhaka Nursing College ladies hostel, Dhaka",
+                "Permanent Address": "Durgapur, Aminpur, Pabna",
+                "Marital status": "Unmarried",
+                "Religion": "Islam",
+                "Nationality": "Bangladeshi",
+                "NID NO": "1522621620",
+                "Blood group": "O +(ve)"
+            },
+            references: [
+                {
+                    name: "Rehana Khanom",
+                    details: "Principal\nDhaka nursing college, Dhaka\n01711-946130"
+                },
+                {
+                    name: "Mauluda Zahan",
+                    details: "Nursing Instructor\nDhaka Nursing College, Dhaka\n01718-076082"
+                },
+                {
+                    name: "Jesmin Akter",
+                    details: "Nursing Instructor\nDhaka Nursing College, Dhaka\n01911-578934"
+                }
+            ],
+            declaration: "I hereby declare that all the information stated above is true, complete, and accurate to the best of my knowledge and belief. I take full responsibility for the authenticity of the information provided.",
+            signature: ""
+        };
 
-            const name = document.getElementById('inp-name').value;
-            setTxt('out-name', name);
-            setTxt('out-sig-name', name);
-            setTxt('out-address', document.getElementById('inp-address').value);
-            setTxt('out-phone', document.getElementById('inp-phone').value);
-            setTxt('out-email', document.getElementById('inp-email').value);
-            setTxt('out-objective', document.getElementById('inp-objective').value);
-            setTxt('out-job1-title', document.getElementById('inp-job1-title').value);
-            setTxt('out-job1-date', document.getElementById('inp-job1-date').value);
-            setList('out-duties', 'inp-duties');
-            setTxt('out-edu1-deg', document.getElementById('inp-edu1-deg').value);
-            setTxt('out-edu1-school', document.getElementById('inp-edu1-school').value);
-            setTxt('out-edu1-grade', document.getElementById('inp-edu1-grade').value);
-            setTxt('out-father', document.getElementById('inp-father').value);
-            setTxt('out-dob', document.getElementById('inp-dob').value);
-            setTxt('out-nid', document.getElementById('inp-nid').value);
+        let cvData = JSON.parse(localStorage.getItem('cvData')) || defaultData;
+        // Upgrade check: if references is an object (old version), reset to defaultData
+        if (cvData.references && !Array.isArray(cvData.references)) {
+            cvData = defaultData;
         }
 
-        // --- CROPPER LOGIC ---
+        // --- RENDER LOGIC ---
+
+        function renderCV() {
+            const p = cvData.personal;
+            const html = `
+            <!-- HEADER -->
+            <div class="cv-header">
+                <div class="header-text">
+                    <h1>${p.name || 'Your Name'}</h1>
+                    <p style="margin-bottom:2px;">${p.address}</p>
+                    <p>${p.phone}</p>
+                    <p>${p.email}</p>
+                </div>
+                <div class="profile-photo ${p.photo ? 'has-img' : ''}">
+                    ${p.photo ? `<img src="${p.photo}">` : '<span>Photo</span>'}
+                </div>
+            </div>
+
+            <!-- OBJECTIVE -->
+            ${cvData.objective ? `
+                <div class="section-header">Objective</div>
+                <div class="content-text">${cvData.objective}</div>
+            ` : ''}
+
+            <!-- EXPERIENCE -->
+            ${cvData.experiences.length > 0 ? `<div class="section-header">Experience</div>` : ''}
+            ${cvData.experiences.map(exp => `
+                <div class="exp-item">
+                    <div class="exp-header">
+                        <span>${exp.title}</span>
+                        <span>${exp.date}</span>
+                    </div>
+                    ${exp.role ? `<div class="exp-sub">${exp.role}</div>` : ''}
+                    <ul class="exp-duties">
+                        ${exp.duties.split('\n').filter(l => l.trim()).map(line => `<li>${line}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('')}
+
+            <!-- EDUCATION -->
+            ${cvData.education.length > 0 ? `
+                <div class="section-header">Education</div>
+                <table class="edu-table">
+                    <thead>
+                        <tr>
+                            <th style="width:25%">Course / Degree</th>
+                            <th style="width:30%">School / University</th>
+                            <th style="width:25%">Grade / Score</th>
+                            <th style="width:20%">Year</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${cvData.education.map(edu => `
+                            <tr>
+                                <td>${edu.degree}</td>
+                                <td>${edu.school}</td>
+                                <td>${edu.grade.replace(/\n/g, '<br>')}</td>
+                                <td>${edu.year}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            ` : ''}
+
+            <!-- COMPETENCIES & SKILLS -->
+            ${cvData.competencies ? `
+                <div class="section-header">Competencies</div>
+                <ul>${cvData.competencies.split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('')}</ul>
+            ` : ''}
+
+            ${cvData.softSkills ? `
+                <div class="section-header">Soft Skills</div>
+                <ul>${cvData.softSkills.split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('')}</ul>
+            ` : ''}
+
+            <!-- ACHIEVEMENTS -->
+            ${cvData.achievements ? `
+                <div class="section-header">Achievements & Awards</div>
+                <ul>${cvData.achievements.split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('')}</ul>
+            `: ''}
+
+            <!-- LANGUAGES -->
+             ${cvData.languages ? `
+                <div class="section-header">Languages</div>
+                <ul>${cvData.languages.split('\n').filter(l => l.trim()).map(l => `<li>${l}</li>`).join('')}</ul>
+            `: ''}
+
+            <!-- PERSONAL DETAILS -->
+            <div class="section-header">Personal Information</div>
+            <table class="info-table">
+                ${Object.entries(cvData.personalDetails).map(([key, val]) => `
+                    <tr>
+                        <td class="info-key">${key}</td>
+                        <td class="info-val">: ${val}</td>
+                    </tr>
+                `).join('')}
+            </table>
+
+            <!-- REFERENCES (Now an Array) -->
+            ${cvData.references.length > 0 ? `
+                <div class="section-header">Reference</div>
+                <div class="ref-grid" style="${cvData.references.length > 2 ? 'grid-template-columns: 1fr 1fr 1fr;' : ''}">
+                    ${cvData.references.map(ref => `
+                        <div class="ref-item">
+                            <div class="ref-name">${ref.name}</div>
+                            <div class="ref-details">${ref.details}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `: ''}
+
+            <!-- DECLARATION -->
+            ${cvData.declaration ? `
+                <div class="section-header">Declaration</div>
+                <div class="declaration">${cvData.declaration}</div>
+            `: ''}
+
+            <!-- SIGNATURE -->
+            <div class="signature-area">
+                <div class="signature-box">
+                    <div class="signature-img">
+                        ${cvData.signature ? `<img src="${cvData.signature}">` : ''}
+                    </div>
+                    <div class="signature-line">${p.name.toUpperCase()}</div>
+                </div>
+            </div>
+        `;
+            document.getElementById('cv-paper').innerHTML = html;
+            localStorage.setItem('cvData', JSON.stringify(cvData));
+        }
+
+        function renderEditor() {
+            const p = cvData.personal;
+            const panel = document.getElementById('editor-panel');
+            let html = '<button class="print-btn" onclick="window.print()">Download PDF / Print</button>';
+
+            // IMAGES
+            html += `
+            <h2>Images</h2>
+            <div class="upload-btn-wrapper">
+                <button class="btn-upload">Upload Profile Photo</button>
+                <input type="file" onchange="initCropper(this, 'photo')">
+            </div>
+            <div class="upload-btn-wrapper">
+                <button class="btn-upload">Upload Signature</button>
+                <input type="file" onchange="initCropper(this, 'signature')">
+            </div>
+        `;
+
+            // HEADER
+            html += `<h2>Header Details</h2>
+            ${createInput('Full Name', 'personal.name', p.name)}
+            ${createInput('Address', 'personal.address', p.address)}
+            ${createInput('Phone', 'personal.phone', p.phone)}
+            ${createInput('Email', 'personal.email', p.email)}
+        `;
+
+            // OBJECTIVE
+            html += `<h2>Objective</h2>
+            ${createTextarea('Career Objective', 'objective', cvData.objective)}
+        `;
+
+            // EXPERIENCE
+            html += `<h2>Experience</h2>`;
+            cvData.experiences.forEach((exp, idx) => {
+                html += `<div class="editor-section">
+                <button class="btn-remove" onclick="removeArrayItem('experiences', ${idx})">x</button>
+                ${createInput('Title', `experiences[${idx}].title`, exp.title)}
+                ${createInput('Role', `experiences[${idx}].role`, exp.role)}
+                ${createInput('Duration', `experiences[${idx}].date`, exp.date)}
+                ${createTextarea('Duties / Rotations', `experiences[${idx}].duties`, exp.duties)}
+            </div>`;
+            });
+            html += `<button class="btn-add" onclick="addExperience()">+ Add Experience</button>`;
+
+            // EDUCATION
+            html += `<h2>Education</h2>`;
+            cvData.education.forEach((edu, idx) => {
+                html += `<div class="editor-section">
+                <button class="btn-remove" onclick="removeArrayItem('education', ${idx})">x</button>
+                ${createInput('Course / Degree', `education[${idx}].degree`, edu.degree)}
+                ${createInput('School / University', `education[${idx}].school`, edu.school)}
+                <div style="display:flex; gap:10px;">
+                    ${createInput('Grade/Score', `education[${idx}].grade`, edu.grade)}
+                    ${createInput('Year', `education[${idx}].year`, edu.year)}
+                </div>
+            </div>`;
+            });
+            html += `<button class="btn-add" onclick="addEducation()">+ Add Education</button>`;
+
+            // SKILLS
+            html += `<h2>Skills & Layout</h2>
+            ${createTextarea('Competencies', 'competencies', cvData.competencies)}
+            ${createTextarea('Soft Skills', 'softSkills', cvData.softSkills)}
+            ${createTextarea('Achievements', 'achievements', cvData.achievements)}
+            ${createTextarea('Languages', 'languages', cvData.languages)}
+        `;
+
+            // PERSONAL DETAILS
+            html += `<h2>Personal Information</h2>`;
+            Object.entries(cvData.personalDetails).forEach(([key, val]) => {
+                html += `<div class="form-group">
+                <label>${key}</label>
+                <input type="text" value="${val}" oninput="updatePersonalDetail('${key}', this.value)">
+            </div>`;
+            });
+
+            // REFERENCES (Updated to Array)
+            html += `<h2>References</h2>`;
+            cvData.references.forEach((ref, idx) => {
+                html += `<div class="editor-section">
+                <button class="btn-remove" onclick="removeArrayItem('references', ${idx})">x</button>
+                ${createInput('Name', `references[${idx}].name`, ref.name)}
+                ${createTextarea('Details', `references[${idx}].details`, ref.details)}
+            </div>`;
+            });
+            html += `<button class="btn-add" onclick="addReference()">+ Add Reference</button>`;
+
+            panel.innerHTML = html;
+        }
+
+        function createInput(label, path, value) {
+            // Safe value handling
+            value = value || "";
+            return `
+            <div class="form-group">
+                <label>${label}</label>
+                <input type="text" value="${value.replace(/"/g, '&quot;')}" oninput="updateField('${path}', this.value)">
+            </div>
+        `;
+        }
+        function createTextarea(label, path, value) {
+            value = value || "";
+            return `
+            <div class="form-group">
+                <label>${label}</label>
+                <textarea oninput="updateField('${path}', this.value)">${value}</textarea>
+            </div>
+        `;
+        }
+
+        window.updateField = (path, value) => {
+            if (path.includes('[')) {
+                const [arrName, rest] = path.split('[');
+                const [idxStr, prop] = rest.split('].');
+                const idx = parseInt(idxStr);
+                cvData[arrName][idx][prop] = value;
+            } else if (path.includes('.')) {
+                const [parent, child] = path.split('.');
+                cvData[parent][child] = value;
+            } else {
+                cvData[path] = value;
+            }
+            renderCV();
+        };
+
+        window.updatePersonalDetail = (key, value) => {
+            cvData.personalDetails[key] = value;
+            renderCV();
+        };
+
+        window.addExperience = () => {
+            cvData.experiences.push({ title: "New Position", role: "", date: "", duties: "" });
+            renderAll();
+        };
+        window.addEducation = () => {
+            cvData.education.push({ degree: "", school: "", grade: "", year: "" });
+            renderAll();
+        };
+        window.addReference = () => {
+            cvData.references.push({ name: "New Reference", details: "" });
+            renderAll();
+        }
+        window.removeArrayItem = (arrName, index) => {
+            cvData[arrName].splice(index, 1);
+            renderAll();
+        };
+
+        function renderAll() {
+            renderEditor();
+            renderCV();
+        }
+
         let cropper;
-        let currentType = ''; // 'photo' or 'signature'
+        let currentPhotoType = '';
         const modal = document.getElementById('crop-modal');
-        const imageElement = document.getElementById('image-to-crop');
+        const imageEl = document.getElementById('image-to-crop');
 
-        function initCropper(input, type) {
+        window.initCropper = (input, type) => {
             if (input.files && input.files[0]) {
-                currentType = type;
+                currentPhotoType = type;
                 const reader = new FileReader();
-                
-                reader.onload = function (e) {
-                    imageElement.src = e.target.result;
+                reader.onload = (e) => {
+                    imageEl.src = e.target.result;
                     modal.style.display = 'block';
-                    
-                    // Destroy previous cropper if exists
-                    if (cropper) { cropper.destroy(); }
-
-                    // Initialize Cropper
-                    cropper = new Cropper(imageElement, {
-                        aspectRatio: type === 'photo' ? 0.85 : NaN, // Portrait for photo, Free for sig
-                        viewMode: 1,
-                        autoCropArea: 1,
+                    if (cropper) cropper.destroy();
+                    cropper = new Cropper(imageEl, {
+                        aspectRatio: type === 'photo' ? 0.85 : NaN,
+                        viewMode: 1, autoCropArea: 1
                     });
                 };
                 reader.readAsDataURL(input.files[0]);
-                // Reset input value so same file can be selected again if needed
                 input.value = '';
             }
-        }
+        };
 
-        function cropImage() {
+        window.cropImage = () => {
             if (!cropper) return;
-
-            // Get cropped canvas
-            const canvas = cropper.getCroppedCanvas({
-                width: currentType === 'photo' ? 300 : 600, // Resize for performance
-            });
-
-            const croppedDataUrl = canvas.toDataURL();
-
-            if (currentType === 'photo') {
-                const img = document.getElementById('out-photo-img');
-                img.src = croppedDataUrl;
-                img.style.display = 'block';
-                document.getElementById('photo-placeholder').style.display = 'none';
-            } else if (currentType === 'signature') {
-                const img = document.getElementById('out-sig-img');
-                img.src = croppedDataUrl;
-                img.style.display = 'block';
-            }
-
+            const canvas = cropper.getCroppedCanvas({ width: currentPhotoType === 'photo' ? 300 : 600 });
+            const dataUrl = canvas.toDataURL();
+            if (currentPhotoType === 'photo') cvData.personal.photo = dataUrl;
+            else cvData.signature = dataUrl;
             closeModal();
-        }
-
-        function closeModal() {
+            renderCV();
+        };
+        window.closeModal = () => {
             modal.style.display = 'none';
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-        }
+            if (cropper) { cropper.destroy(); cropper = null; }
+        };
 
-        // Initialize text on load
-        window.onload = updateCV;
+        renderAll();
     </script>
 </body>
+
 </html>
